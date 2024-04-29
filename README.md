@@ -4,7 +4,9 @@
 - File Restoration process
 - File authorisation process
 
-### How file authorization si taking place?
+> Make sure to add all env variables used in actions in the convex dashboard as they are running there
+
+### How file upload to an organisation authorization is taking place?
 
 - We can do it in multiple ways
 
@@ -21,6 +23,15 @@
 - Also it will be an internal action will be created for clerk webhook
 - ALso here we are attaching NEXT_PUBLIC_CONVEX_URL to the token identifier to distinguish its a convex one
 - Also add the env variables like CLERK_WEBHOOK_SECRET in the convex dashboard
+
+### TokenIdentifier meaning
+- tokenIdentifier is a combination of subject and issuer to ensure uniqueness even when multiple providers are used. If you followed one of our integrations with Clerk or Auth0 at least the following fields will be present: familyName , givenName , nickname , pictureUrl , updatedAt , email , emailVerified .
+- Example suppose the identifier is 
+
+  Identifier = "https://reminiscent-pony-148.convex.cloud|user_2flmyRfk8LXMNE9Xq06nKk0J4rn"
+
+  { subject: "user_2flmyRfk8LXMNE9Xq06nKk0J4rn", issuer: "https://reminiscent-pony-148.convex.cloud" }
+
 
 ### More things to do
 
