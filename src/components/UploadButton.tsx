@@ -20,7 +20,6 @@ import { api } from "../../convex/_generated/api";
 
 export default function UploadButton({ orgId }: { orgId: string }) {
   const { toast } = useToast();
-  const mutation = useMutation(api.files.createFile);
   async function uploadFileHandler(
     prevState: UploadFileType,
     payload: FormData

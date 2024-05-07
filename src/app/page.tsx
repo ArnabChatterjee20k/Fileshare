@@ -1,9 +1,11 @@
 "use client";
-import { Button } from "@/components/ui/button";
 import { useOrganization, useUser } from "@clerk/nextjs";
-import { useConvex, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import UploadButton from "@/components/UploadButton";
+import FileCard from "@/components/FileCard";
+import EmptyBox from "@/components/EmptyBox";
+import { Button } from "@/components/ui/button";
 export default function Home() {
   const organization = useOrganization();
   const user = useUser();
@@ -17,11 +19,24 @@ export default function Home() {
   const files = useQuery(api.files.getFiles, orgId ? { orgId } : "skip");
   return (
     <main className="container mx-auto pt-12">
-      <div className="flex justify-between items-center">
-        <h1 className="text-4xl font-bold">Your Files</h1>
-        {orgId && <UploadButton orgId={orgId} />}
+      {files?.length ? (
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold">Your Files</h1>
+          {orgId && <UploadButton orgId={orgId} />}
+        </div>
+      ) : null}
+      {files?.length === 0 && (
+        <div className="mx-auto flex flex-col items-center justify-center gap-4 min-h-[60vh]">
+          <EmptyBox className="max-w-[300px]" />
+          <p className="text-2xl mx-auto text-center">
+            You have no files, upload one now
+          </p>
+          {orgId && <UploadButton orgId={orgId} />}
+        </div>
+      )}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {user.isLoaded && files?.map((file) => <FileCard file={file} />)}
       </div>
-      {user.isLoaded && files?.map((file) => <h2>{file.name}</h2>)}
     </main>
   );
 }
