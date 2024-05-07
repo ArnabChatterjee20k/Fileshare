@@ -25,7 +25,7 @@ http.route({
       switch (result.type) {
         case "user.created":
           await ctx.runMutation(internal.users.createUser, {
-            tokenIdentifier:`https://${process.env.NEXT_PUBLIC_CONVEX_URL}|${result.data.id}`
+            tokenIdentifier:`https://${process.env.NEXT_PUBLIC_CLERK_ISSUER}|${result.data.id}`
           });
           break;
         // case "user.updated":

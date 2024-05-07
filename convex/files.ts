@@ -7,7 +7,8 @@ async function hasAccessToOrg(
   orgId: string
 ) {
   const user = await getUser(ctx, tokenIdentifier);
-  const hasAccess = user.orgIds.includes(orgId);
+  // incase of personal account, the orgid will be in the token identifier that is the subject or the token or the user id
+  const hasAccess = user.orgIds.includes(orgId) || user.tokenIdentifier.includes(orgId);
   return hasAccess;
 }
 export const getFiles = query({
@@ -34,6 +35,7 @@ export const createFile = mutation({
   args: { name: v.string(), orgId: v.string() },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
+    console.log({identity})
     if (!identity)
       throw new ConvexError("Yuo must be logged in to upload a file");
 
