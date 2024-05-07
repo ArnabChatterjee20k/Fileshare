@@ -1,4 +1,12 @@
-import { UserButton,UserProfile,OrganizationSwitcher } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import {
+  UserButton,
+  UserProfile,
+  OrganizationSwitcher,
+  SignedOut,
+  SignInButton,
+} from "@clerk/nextjs";
+
 export function Header() {
   return (
     <header className="text-gray-50 body-font shadow-md">
@@ -10,8 +18,13 @@ export function Header() {
           <a className="mr-5 hover:text-gray-900">First Link</a>
         </nav>
         <div className="flex gap-3">
-            <OrganizationSwitcher/>
-            <UserButton/>
+          <OrganizationSwitcher />
+          <UserButton />
+          <SignedOut>
+            <SignInButton mode="modal">
+              <Button>Sign In</Button>
+            </SignInButton>
+          </SignedOut>
         </div>
       </div>
     </header>
