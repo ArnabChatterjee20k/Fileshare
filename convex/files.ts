@@ -1,6 +1,16 @@
 import { ConvexError, v } from "convex/values";
-import { MutationCtx, QueryCtx, mutation, query } from "./_generated/server";
+import {
+  MutationCtx,
+  QueryCtx,
+  mutation,
+  query,
+  internalAction,
+  internalMutation,
+  action,
+} from "./_generated/server";
 import { getUser } from "./users";
+import { api, internal } from "./_generated/api";
+
 async function hasAccessToOrg(
   ctx: QueryCtx | MutationCtx,
   tokenIdentifier: string,
@@ -32,8 +42,9 @@ export const getFiles = query({
   },
 });
 
+// we can make this more robust and predictable. Written in the readme
 export const createFile = mutation({
-  args: { name: v.string(), orgId: v.string() },
+  args: { name: v.string(), orgId: v.string(), file: v.bytes() },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
     console.log({ identity });
@@ -47,9 +58,16 @@ export const createFile = mutation({
       args.orgId
     );
     if (!hasAccess) throw new ConvexError("Yout dont have access to this org");
-    await ctx.db.insert("files", {
+
+    const fileRecordId = await ctx.db.insert("files", {
       name: args.name,
       orgId: args.orgId,
+    });
+
+    await ctx.scheduler.runAfter(0, internal.files.uploadFile, {
+      fileName: args.name,
+      file: args.file,
+      fileRecordId: fileRecordId,
     });
   },
 });
@@ -74,5 +92,30 @@ export const deleteFile = mutation({
       throw new ConvexError("You dont have permission to delete this file");
 
     await ctx.db.delete(args.fileId);
+  },
+});
+
+export const uploadFile = internalAction({
+  args: { fileName: v.string(), file: v.bytes(), fileRecordId: v.id("files") },
+  async handler(ctx, args) {
+    const uploadURL = await ctx.storage.generateUploadUrl();
+    const result = await fetch(uploadURL, {
+      method: "POST",
+      body: args.file,
+    });
+    const { storageId } = await result.json();
+    await ctx.runMutation(internal.files.readData, {
+      fileId: storageId,
+      fileRecordId: args.fileRecordId,
+    });
+  },
+});
+
+export const readData = internalMutation({
+  args: { fileRecordId: v.id("files"), fileId: v.string() },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.fileRecordId, {
+      storageId: args.fileId,
+    });
   },
 });

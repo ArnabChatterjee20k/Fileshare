@@ -8,17 +8,15 @@ export type UploadFileType = {
   file: File | null;
 };
 
-export default async function uploadFile({
-  name,
-  file,
-  orgId,
-}: UploadFileType & { orgId: string }) {
+export default async function uploadFile(payload: FormData) {
+  console.log(payload.get("file"));
   const token = await getAuthToken();
   await fetchMutation(
     api.files.createFile,
     {
-      name,
-      orgId,
+      name: payload.get("name") as string,
+      orgId: payload.get("orgId") as string,
+      file: await (payload.get("file") as File).arrayBuffer(),
     },
     { token }
   );

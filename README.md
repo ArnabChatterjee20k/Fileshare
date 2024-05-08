@@ -33,7 +33,23 @@
   { subject: "user_2flmyRfk8LXMNE9Xq06nKk0J4rn", issuer: "https://reminiscent-pony-148.convex.cloud" }
 
 
+### Importance of export in the convex functions
+Export make them available to be pushable to the remote convex
+
+### Making the File Upload or createfile function more robust
+* We cant run action inside a mutation because mutation is transactional while action is not. We can make fetch calls inside actions but not in mutations. So to run action inside the mutation we can schedule it
+* Current working = db file record insertion -> action scheduled and call
+* Problem -> What if the scheduled action fail?? If db record insertion failed then the action will not get scheduled but not vice versa as action is not transactional.
+* Since we cant implement transactions in convex externally, we can issue delete queries but it is still prone to errors
+
 ### More things to do
 
+* [ ] Adding preview snapshot of pdf or csv or other files by taking a snapshot
 * [ ] Add import pdf from notion
 * [ ] Add vector search
+
+### File and type preview logic
+* File uploaded to storage
+* Determine the file type and add to the db
+* Take a snapshot or the thumnail shot of the file(ex-> csv,image,pdf,docx,etc)
+* If zip or some other files they a default icon

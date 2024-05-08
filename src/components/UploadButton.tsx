@@ -15,21 +15,22 @@ import { useFormState, useFormStatus } from "react-dom";
 import uploadFile from "@/actions/upload-file-action";
 import type { UploadFileType } from "@/actions/upload-file-action";
 import { useToast } from "./ui/use-toast";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useRef } from "react";
 
 export default function UploadButton({ orgId }: { orgId: string }) {
   const { toast } = useToast();
+  const fileRef = useRef(null);
   async function uploadFileHandler(
     prevState: UploadFileType,
     payload: FormData
   ) {
     // @ts-ignore
     // we can check here the file is present or not to remove the ts errors
-    const file = payload.get("file")[0] as File;
+    const file = await payload.get("file").arrayBuffer();
     const name = payload.get("name") as string;
+    payload.append("orgId",orgId)
     try {
-      await uploadFile({ name, file, orgId });
+      await uploadFile(payload);
       toast({
         title: "File uploaded",
         description: "Now everyone can view your file",
@@ -76,12 +77,7 @@ export default function UploadButton({ orgId }: { orgId: string }) {
           </div>
           <div className="grid w-full max-w-sm items-center gap-1.5">
             <Label htmlFor="file">File</Label>
-            <Input
-              name="file"
-              id="file"
-              type="file"
-              value={formState.file ? formState.file.name : undefined}
-            />
+            <Input name="file" id="file" type="file" ref={fileRef} />
           </div>
           <SubmitButton />
         </form>
