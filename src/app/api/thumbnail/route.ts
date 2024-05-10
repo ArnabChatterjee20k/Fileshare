@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
-import puppeteer from "puppeteer";
 import sharp from "sharp";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium-min";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -22,7 +23,7 @@ export async function GET() {
 }
 async function takeScreenshot(url: string) {
   // Launch Puppeteer
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await getBrowser();
 
   // Create a new page
   const page = await browser.newPage();
@@ -41,6 +42,17 @@ async function takeScreenshot(url: string) {
   return screenshotBuffer;
 }
 
+async function getBrowser() {
+  return puppeteer.launch({
+    args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath(
+      `https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar`
+    ),
+    headless: chromium.headless,
+    ignoreHTTPSErrors: true,
+  });
+}
 async function resize(buffer: ArrayBuffer) {
   const newData = sharp(buffer).extract({
     top: 70,
