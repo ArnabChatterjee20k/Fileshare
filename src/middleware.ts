@@ -3,6 +3,7 @@ const isProtectedRoute = createRouteMatcher([]);
 export default clerkMiddleware((auth, req) => {
   if (isProtectedRoute(req)) auth().protect();
 });
+// removed the ./api pattern
 export const config = {
-  matcher: ["/((?!.+.[w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
+  matcher: ["/((?!.+.[w]+$|_next).*)", "/"],
 };

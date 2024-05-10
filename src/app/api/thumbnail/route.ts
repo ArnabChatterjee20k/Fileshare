@@ -7,7 +7,14 @@ export async function POST(request: NextRequest) {
   const url = body.url;
   const buffer = await takeScreenshot(url);
   const image = await resize(buffer);
-  return new Response(image, { headers: { "Content-Type": "image/png" } });
+  return new Response(image, {
+    headers: {
+      "Content-Type": "image/png",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }
 
 export async function GET() {
