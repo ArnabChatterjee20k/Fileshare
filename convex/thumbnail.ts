@@ -2,8 +2,8 @@
 
 import { ConvexError, v } from "convex/values";
 import { action, internalAction } from "./_generated/server";
-import playwright from "playwright";
 import sharp from "sharp";
+import { uploadToStorage } from "./files";
 
 export const createThumbnail = internalAction({
   args: { storageId: v.id("_storage") },
@@ -15,41 +15,50 @@ export const createThumbnail = internalAction({
       throw new ConvexError(
         `URL does not exist for storage-id ${args.storageId}`
       );
-    const screenShotBuffer = await takeScreenShot(url);
     const uploadURL = await ctx.storage.generateUploadUrl();
-    // const storageId = await uploadToStorage(
-    //   uploadURL,
-    //   "image/png",
-    //   screenShotBuffer
-    // );
-    // console.log({ storageId });
+    if (contentType?.includes("pdf")) {
+      const thumbnail = await getPDFThumbnail(url);
+      const storageId = await uploadToStorage(
+        uploadURL,
+        "image/png",
+        // @ts-ignore
+        thumbnail
+      );
+      console.log({ storageId });
+    } else if (contentType?.includes("image")) {
+      const thumbnail = await getImageThumbnail(url);
+      const storageId = await uploadToStorage(
+        uploadURL,
+        "image/png",
+        thumbnail
+      );
+      console.log({ storageId });
+    }
   },
 });
 
-async function takeScreenShot(url: string) {
-  const browser = await playwright.chromium.launch({ headless: false });
-  const context = await browser.newContext();
-  const page = await context.newPage();
-
-  // Navigate to the URL and wait for the PDF to load
-  await page.goto(url, { waitUntil: "networkidle" });
-  await page.waitForTimeout(5000);
-  //   await page.waitForResponse(url, { waitUntil: "networkidle" });
-  // Adjust viewport size if needed
-
-  const buffer = await page.screenshot({ path: "test.png" });
-
-  // Close Playwright
-  await browser.close();
-
-  return buffer;
-}
-async function resize(buffer: ArrayBuffer) {
-  const newData = sharp(buffer).extract({
-    top: 70,
-    left: 330,
-    width: 400,
-    height: 150,
+const getPDFThumbnail = async (pdfURL: string) => {
+  const body = JSON.stringify({ url: pdfURL });
+  const result = await fetch(process.env.PDF_THUMBNAIL_SERVICE as string, {
+    method: "POST",
+    body: body,
+    headers: { "Content-Type": "application/json" },
   });
-  newData.toFile("output.png");
-}
+  const buffer = await result.arrayBuffer();
+  return Buffer.from(buffer);
+};
+
+const getImageThumbnail = async (imageURL: string) => {
+  const result = await fetch(imageURL);
+  const buffer = await result.arrayBuffer();
+  const cropOptions = {
+    left: 0,
+    top: 0,
+    width: 600,
+    height: 100,
+  };
+
+  const croppedBuffer = await sharp(buffer).extract(cropOptions).toBuffer();
+
+  return croppedBuffer;
+};
