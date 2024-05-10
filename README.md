@@ -42,6 +42,50 @@ Export make them available to be pushable to the remote convex
 * Problem -> What if the scheduled action fail?? If db record insertion failed then the action will not get scheduled but not vice versa as action is not transactional.
 * Since we cant implement transactions in convex externally, we can issue delete queries but it is still prone to errors
 
+### Learnings
+* Using browsers inside serverless(50mb memory size). Instead of installing chromium browsers binaries by default. We can intall remote chromium binaries
+  ```js
+  import puppeteer from "puppeteer-core";
+  import chromium from "@sparticuz/chromium-min";
+
+  async function takeScreenshot(url: string) {
+    // Launch Puppeteer
+    const browser = await getBrowser();
+
+    // Create a new page
+    const page = await browser.newPage();
+
+    // Navigate to the URL
+    await page.goto(url);
+
+    // Wait for the page to load (adjust timing if needed)
+
+    // Take a screenshot and get the buffer
+    const screenshotBuffer = (await page.screenshot({ path: "test.png" })).buffer;
+
+    // Close Puppeteer
+    await browser.close();
+
+    return screenshotBuffer;
+  }
+
+  async function getBrowser() {
+    return puppeteer.launch({
+      args: [...chromium.args, "--hide-scrollbars", "--disable-web-security"],
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(
+        `https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar`
+      ),
+      // headless: chromium.headless,
+      headless:false,
+      ignoreHTTPSErrors: true,
+    });
+  }
+  ```
+  > But we cant use this solution for rendering pdf. Cause it relies on graphical environment. And serverless functions dont have access to that. We could have also used browless service as well.
+
+  > Due to all the issues, going for hosting a docker container and existing npm packages
+
 ### More things to do
 
 * [ ] Adding preview snapshot of pdf or csv or other files by taking a snapshot

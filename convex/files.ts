@@ -44,7 +44,12 @@ export const getFiles = query({
 
 // we can make this more robust and predictable. Written in the readme
 export const createFile = mutation({
-  args: { name: v.string(), orgId: v.string(), file: v.bytes() },
+  args: {
+    name: v.string(),
+    orgId: v.string(),
+    file: v.bytes(),
+    fileType: v.string(),
+  },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
     console.log({ identity });
@@ -62,12 +67,14 @@ export const createFile = mutation({
     const fileRecordId = await ctx.db.insert("files", {
       name: args.name,
       orgId: args.orgId,
+      fileType: args.fileType,
     });
 
     await ctx.scheduler.runAfter(0, internal.files.uploadFile, {
       fileName: args.name,
       file: args.file,
       fileRecordId: fileRecordId,
+      fileMime: args.fileType,
     });
   },
 });
@@ -96,26 +103,56 @@ export const deleteFile = mutation({
 });
 
 export const uploadFile = internalAction({
-  args: { fileName: v.string(), file: v.bytes(), fileRecordId: v.id("files") },
+  args: {
+    fileName: v.string(),
+    file: v.bytes(),
+    fileRecordId: v.id("files"),
+    fileMime: v.string(),
+  },
   async handler(ctx, args) {
     const uploadURL = await ctx.storage.generateUploadUrl();
-    const result = await fetch(uploadURL, {
-      method: "POST",
-      body: args.file,
-    });
-    const { storageId } = await result.json();
-    await ctx.runMutation(internal.files.readData, {
-      fileId: storageId,
+    // const result = await fetch(uploadURL, {
+    //   method: "POST",
+    //   body: args.file,
+    //   headers: { "Content-Type": args.fileMime },
+    // });
+    // const { storageId } = await result.json();
+
+    const storageId = await uploadToStorage(
+      uploadURL,
+      args.fileMime,
+      args.file
+    );
+    await ctx.runMutation(internal.files.updateFileURLInDB, {
+      fileUrl: (await ctx.storage.getUrl(storageId)) as string,
       fileRecordId: args.fileRecordId,
+    });
+
+    await ctx.scheduler.runAfter(0, internal.thumbnail.createThumbnail, {
+      storageId: storageId,
     });
   },
 });
 
-export const readData = internalMutation({
-  args: { fileRecordId: v.id("files"), fileId: v.string() },
+export const updateFileURLInDB = internalMutation({
+  args: { fileRecordId: v.id("files"), fileUrl: v.string() },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.fileRecordId, {
-      storageId: args.fileId,
+      storageId: args.fileUrl,
     });
   },
 });
+
+export const uploadToStorage = async (
+  uploadURL: string,
+  fileMIME: string,
+  file: ArrayBuffer
+) => {
+  const result = await fetch(uploadURL, {
+    method: "POST",
+    body: file,
+    headers: { "Content-Type": fileMIME },
+  });
+  const { storageId } = await result.json();
+  return storageId;
+};
