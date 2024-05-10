@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
-import playwright from "playwright";
+import puppeteer from "puppeteer";
 import sharp from "sharp";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const url = body.url;
-  const buffer = await takeScreenShot(url);
+  const buffer = await takeScreenshot(url);
   const image = await resize(buffer);
   return new Response(image, { headers: { "Content-Type": "image/png" } });
 }
@@ -13,23 +13,25 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return new Response("get");
 }
-async function takeScreenShot(url: string) {
-  const browser = await playwright.chromium.launch({ headless: false });
-  const context = await browser.newContext();
-  const page = await context.newPage();
+async function takeScreenshot(url: string) {
+  // Launch Puppeteer
+  const browser = await puppeteer.launch({ headless: false });
 
-  // Navigate to the URL and wait for the PDF to load
-  await page.goto(url, { waitUntil: "networkidle" });
-  await page.waitForTimeout(5000);
-  //   await page.waitForResponse(url, { waitUntil: "networkidle" });
-  // Adjust viewport size if needed
+  // Create a new page
+  const page = await browser.newPage();
 
-  const buffer = await page.screenshot({ path: "test.png" });
+  // Navigate to the URL
+  await page.goto(url);
 
-  // Close Playwright
+  // Wait for the page to load (adjust timing if needed)
+
+  // Take a screenshot and get the buffer
+  const screenshotBuffer = (await page.screenshot({ path: "test.png" })).buffer;
+
+  // Close Puppeteer
   await browser.close();
 
-  return buffer;
+  return screenshotBuffer;
 }
 
 async function resize(buffer: ArrayBuffer) {
