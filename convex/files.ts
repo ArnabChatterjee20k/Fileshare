@@ -119,7 +119,7 @@ export const uploadFile = internalAction({
     );
 
     await ctx.runMutation(internal.files.updateFileURLInDB, {
-      fileUrl: (await ctx.storage.getUrl(storageId)) as string,
+      fileStorageId: storageId,
       fileRecordId: args.fileRecordId,
     });
 
@@ -131,19 +131,24 @@ export const uploadFile = internalAction({
 });
 
 export const updateFileURLInDB = internalMutation({
-  args: { fileRecordId: v.id("files"), fileUrl: v.string() },
+  args: { fileRecordId: v.id("files"), fileStorageId: v.string() },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.fileRecordId, {
-      storageId: args.fileUrl,
+      storageId: args.fileStorageId,
     });
   },
 });
 
 export const updateThumbnailURLInDB = internalMutation({
-  args: { fileRecordId: v.id("files"), thumbnailURL: v.string() },
+  args: { fileRecordId: v.id("files"), thumbnailId: v.string()},
   handler: async (ctx, args) => {
+    const thumbnailURL = await ctx.storage.getUrl(args.thumbnailId)
+    if(!thumbnailURL){
+      throw new ConvexError(`Thumbnail of id ${args.thumbnailId} does not exists`)
+    }
     await ctx.db.patch(args.fileRecordId, {
-      thumbnailURL: args.thumbnailURL,
+      thumbnailURL: thumbnailURL,
+      thumbnailId:args.thumbnailId
     });
   },
 });

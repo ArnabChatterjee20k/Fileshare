@@ -28,13 +28,9 @@ export const createThumbnail = internalAction({
       "image/png",
       thumbnail
     );
-    const thumbnailURL = await ctx.storage.getUrl(thumbnailStorageId);
-    if (!thumbnailURL) {
-      console.log(`Thumbnail ${thumbnailStorageId} no longer exists`);
-      return;
-    }
+
     await ctx.runMutation(internal.files.updateThumbnailURLInDB, {
-      thumbnailURL: thumbnailURL,
+      thumbnailId: thumbnailStorageId,
       fileRecordId: args.fileRecordId,
     });
   },

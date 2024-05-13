@@ -7,7 +7,8 @@ export default defineSchema({
     orgId: v.optional(v.string()),
     storageId: v.optional(v.string()),
     fileType: v.optional(v.string()),
-    thumbnailURL:v.optional(v.string())
+    thumbnailURL:v.optional(v.string()),
+    thumbnailId:v.optional(v.string())
   }).index("by_orgId", ["orgId"]),
   users: defineTable({
     tokenIdentifier: v.string(),
