@@ -22,6 +22,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getMaterialFileIcon } from "file-extension-icon-js";
+
 import { EllipsisVertical, Loader2, TrashIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { Doc } from "../../convex/_generated/dataModel";
@@ -29,6 +31,7 @@ import { DialogClose } from "@radix-ui/react-dialog";
 import deleteFile from "@/actions/delete-file-action";
 import { toast } from "./ui/use-toast";
 import { Badge } from "./ui/badge";
+import { useRouter } from "next/navigation";
 
 export default function FileCard({ file }: { file: Doc<"files"> }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -50,10 +53,20 @@ export default function FileCard({ file }: { file: Doc<"files"> }) {
         });
     });
   }
+  const router = useRouter()
   return (
     <Card>
       <CardHeader className="relative">
-        <CardTitle>{file.name}</CardTitle>
+        <CardTitle className="flex gap-1 items-center">
+          {file.fileType && (
+            <img
+              src={`${getMaterialFileIcon(file?.fileType?.split("/")[1] as string)}`}
+              alt="js"
+              width="18"
+            />
+          )}
+          {file.name}
+        </CardTitle>
         <DropdownMenu>
           <DropdownMenuTrigger className="absolute right-0 top-5 mx-2">
             <EllipsisVertical size={16} />
@@ -68,16 +81,32 @@ export default function FileCard({ file }: { file: Doc<"files"> }) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <CardDescription>Card Description</CardDescription>
+        <CardDescription>
+          {new Date(file._creationTime).toLocaleDateString()}
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <p>Card Content</p>
+      <CardContent className="h-[70px]">
+        {file.thumbnailURL ? (
+          <img
+            src={file.thumbnailURL}
+            alt="Image"
+            className="object-cover w-full h-full"
+          />
+        ) : (
+          <p>No preview available</p>
+        )}
       </CardContent>
       <CardFooter>
         {file.storageId ? (
-          <Button>Download</Button>
+          <a href={file.storageURL} target="_blank"><Button>Download</Button></a>
         ) : (
-          <Badge className="flex items-center gap-1 py-1 px-2" variant="secondary"><Loader2 className="animate-spin" size={15}/>Uploading</Badge>
+          <Badge
+            className="flex items-center gap-1 py-1 px-2"
+            variant="secondary"
+          >
+            <Loader2 className="animate-spin" size={15} />
+            Uploading
+          </Badge>
         )}
       </CardFooter>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

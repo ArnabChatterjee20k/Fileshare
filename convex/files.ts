@@ -136,6 +136,7 @@ export const updateFileURLInDB = internalMutation({
   handler: async (ctx, args) => {
     await ctx.db.patch(args.fileRecordId, {
       storageId: args.fileStorageId,
+      storageURL:await ctx.storage.getUrl(args.fileStorageId) || ""
     });
   },
 });

@@ -6,6 +6,7 @@ export default defineSchema({
     name: v.string(),
     orgId: v.optional(v.string()),
     storageId: v.optional(v.string()),
+    storageURL:v.optional(v.string()),
     fileType: v.optional(v.string()),
     thumbnailURL:v.optional(v.string()),
     thumbnailId:v.optional(v.string())
