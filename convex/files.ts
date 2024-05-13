@@ -111,18 +111,13 @@ export const uploadFile = internalAction({
   },
   async handler(ctx, args) {
     const uploadURL = await ctx.storage.generateUploadUrl();
-    // const result = await fetch(uploadURL, {
-    //   method: "POST",
-    //   body: args.file,
-    //   headers: { "Content-Type": args.fileMime },
-    // });
-    // const { storageId } = await result.json();
 
     const storageId = await uploadToStorage(
       uploadURL,
       args.fileMime,
       args.file
     );
+
     await ctx.runMutation(internal.files.updateFileURLInDB, {
       fileUrl: (await ctx.storage.getUrl(storageId)) as string,
       fileRecordId: args.fileRecordId,
@@ -130,6 +125,7 @@ export const uploadFile = internalAction({
 
     await ctx.scheduler.runAfter(0, internal.thumbnail.createThumbnail, {
       storageId: storageId,
+      fileRecordId: args.fileRecordId,
     });
   },
 });
@@ -139,6 +135,15 @@ export const updateFileURLInDB = internalMutation({
   handler: async (ctx, args) => {
     await ctx.db.patch(args.fileRecordId, {
       storageId: args.fileUrl,
+    });
+  },
+});
+
+export const updateThumbnailURLInDB = internalMutation({
+  args: { fileRecordId: v.id("files"), thumbnailURL: v.string() },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.fileRecordId, {
+      thumbnailURL: args.thumbnailURL,
     });
   },
 });
@@ -153,6 +158,8 @@ export const uploadToStorage = async (
     body: file,
     headers: { "Content-Type": fileMIME },
   });
-  const { storageId } = await result.json();
+  const data = await result.json();
+  const { storageId } = data;
+  if (!storageId) throw new ConvexError("Error while uploading the file");
   return storageId;
 };
