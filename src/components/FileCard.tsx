@@ -28,6 +28,7 @@ import { Doc } from "../../convex/_generated/dataModel";
 import { DialogClose } from "@radix-ui/react-dialog";
 import deleteFile from "@/actions/delete-file-action";
 import { toast } from "./ui/use-toast";
+import { Badge } from "./ui/badge";
 
 export default function FileCard({ file }: { file: Doc<"files"> }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -73,7 +74,11 @@ export default function FileCard({ file }: { file: Doc<"files"> }) {
         <p>Card Content</p>
       </CardContent>
       <CardFooter>
-        <Button>Download</Button>
+        {file.storageId ? (
+          <Button>Download</Button>
+        ) : (
+          <Badge className="flex items-center gap-1 py-1 px-2" variant="secondary"><Loader2 className="animate-spin" size={15}/>Uploading</Badge>
+        )}
       </CardFooter>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
