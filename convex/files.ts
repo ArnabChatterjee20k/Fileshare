@@ -98,8 +98,11 @@ export const deleteFile = mutation({
 
     if (!hasAccess)
       throw new ConvexError("You dont have permission to delete this file");
-
-    await ctx.db.delete(args.fileId);
+    const deleteActions = [ctx.db.delete(args.fileId)];
+    if (file.storageId) deleteActions.push(ctx.storage.delete(file.storageId));
+    if (file.thumbnailId)
+      deleteActions.push(ctx.storage.delete(file.thumbnailId));
+    await Promise.all(deleteActions);
   },
 });
 
@@ -136,7 +139,7 @@ export const updateFileURLInDB = internalMutation({
   handler: async (ctx, args) => {
     await ctx.db.patch(args.fileRecordId, {
       storageId: args.fileStorageId,
-      storageURL:await ctx.storage.getUrl(args.fileStorageId) || ""
+      storageURL: (await ctx.storage.getUrl(args.fileStorageId)) || "",
     });
   },
 });
