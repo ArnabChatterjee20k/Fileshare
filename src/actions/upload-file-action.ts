@@ -21,7 +21,7 @@ export default async function uploadFile(payload: FormData) {
       name: payload.get("name") as string,
       orgId: payload.get("orgId") as string,
       file: fileBufferArray,
-      fileType:fileType || ""
+      fileType:fileType || "application/octet-stream"
     },
     { token }
   );
