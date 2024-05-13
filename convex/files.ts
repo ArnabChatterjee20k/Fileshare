@@ -38,6 +38,7 @@ export const getFiles = query({
     return ctx.db
       .query("files")
       .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
+      .order("desc")
       .collect();
   },
 });
@@ -140,15 +141,17 @@ export const updateFileURLInDB = internalMutation({
 });
 
 export const updateThumbnailURLInDB = internalMutation({
-  args: { fileRecordId: v.id("files"), thumbnailId: v.string()},
+  args: { fileRecordId: v.id("files"), thumbnailId: v.string() },
   handler: async (ctx, args) => {
-    const thumbnailURL = await ctx.storage.getUrl(args.thumbnailId)
-    if(!thumbnailURL){
-      throw new ConvexError(`Thumbnail of id ${args.thumbnailId} does not exists`)
+    const thumbnailURL = await ctx.storage.getUrl(args.thumbnailId);
+    if (!thumbnailURL) {
+      throw new ConvexError(
+        `Thumbnail of id ${args.thumbnailId} does not exists`
+      );
     }
     await ctx.db.patch(args.fileRecordId, {
       thumbnailURL: thumbnailURL,
-      thumbnailId:args.thumbnailId
+      thumbnailId: args.thumbnailId,
     });
   },
 });
