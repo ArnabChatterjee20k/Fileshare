@@ -16,11 +16,17 @@ async function hasAccessToOrg(
   tokenIdentifier: string,
   orgId: string
 ) {
-  const user = await getUser(ctx, tokenIdentifier);
-  // incase of personal account, the orgid will be in the token identifier that is the subject or the token or the user id
-  const hasAccess =
-    user.orgIds.includes(orgId) || user.tokenIdentifier.includes(orgId);
-  return hasAccess;
+  try {
+    const user = await getUser(ctx, tokenIdentifier);
+    console.log({user,tokenIdentifier})
+    // incase of personal account, the orgid will be in the token identifier that is the subject or the token or the user id
+    const hasAccess =
+      user?.orgIds.includes(orgId) || user?.tokenIdentifier.includes(orgId);
+    return hasAccess;
+  } catch (error) {
+    console.error();
+    return undefined;
+  }
 }
 
 export const getFiles = query({
@@ -74,6 +80,7 @@ export const createFile = mutation({
       name: args.name,
       orgId: args.orgId,
       fileType: args.fileType,
+      delete:false
     });
 
     await ctx.scheduler.runAfter(0, internal.files.uploadFile, {
@@ -108,34 +115,30 @@ export const trash = mutation({
     if (!hasAccess)
       throw new ConvexError("You dont have permission to delete this file");
 
-    const deleteMode = args.operation==="putToTrash"?true:false
+    const deleteMode = args.operation === "putToTrash" ? true : false;
     await ctx.db.patch(file._id, { delete: deleteMode });
   },
 });
 
-export const deleteFile = mutation({
-  args: { fileId: v.id("files"), orgId: v.string() },
-  async handler(ctx, args) {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("You dont have access to this org");
+export const deleteFilesFromTrash = internalMutation({
+  async handler(ctx) {
+    const filesMarkedForDeletion = await ctx.db
+      .query("files")
+      .withIndex("by_id")
+      .filter((q) => q.eq(q.field("delete"), true))
+      .order("desc")
+      .collect();
 
-    const file = await ctx.db.get(args.fileId);
-
-    if (!file) throw new ConvexError("The file does not exists");
-
-    const hasAccess = await hasAccessToOrg(
-      ctx,
-      identity.tokenIdentifier,
-      args.orgId
-    );
-
-    if (!hasAccess)
-      throw new ConvexError("You dont have permission to delete this file");
-    const deleteActions = [ctx.db.delete(args.fileId)];
-    if (file.storageId) deleteActions.push(ctx.storage.delete(file.storageId));
-    if (file.thumbnailId)
-      deleteActions.push(ctx.storage.delete(file.thumbnailId));
-    await Promise.all(deleteActions);
+    const deleteActions = filesMarkedForDeletion.map((file) => {
+      const deletingEntities = [];
+      deletingEntities.push(ctx.db.delete(file._id));
+      if (file.storageId)
+        deletingEntities.push(ctx.storage.delete(file.storageId));
+      if (file.thumbnailId)
+        deletingEntities.push(ctx.storage.delete(file.thumbnailId));
+      return deletingEntities;
+    });
+    await Promise.all(deleteActions.flat());
   },
 });
 

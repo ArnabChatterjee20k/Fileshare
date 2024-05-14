@@ -4,7 +4,7 @@ export default function useAuth() {
   const user = useUser();
 
   let orgId = null;
-  if (organization.isLoaded && user.isLoaded) {
+  if (organization.isLoaded && user?.isLoaded) {
     orgId = organization.organization?.id ?? user.user?.id;
   }
   return {user,orgId,organization}
