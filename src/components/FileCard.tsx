@@ -42,6 +42,7 @@ import { Badge } from "./ui/badge";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import restoreFile from "@/actions/restore-file-action";
+import { Protect } from "@clerk/nextjs";
 
 export default function FileCard({ file }: { file: Doc<"files"> }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -65,16 +66,18 @@ export default function FileCard({ file }: { file: Doc<"files"> }) {
             <EllipsisVertical size={16} />
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem
-              className={`${file.delete ? "text-blue-600" : "text-red-600"} cursor-pointer`}
-              onClick={() => setIsDialogOpen(true)}
-            >
-              {file.delete ? (
-                <RestoreDropdownButtion />
-              ) : (
-                <DeleteDropdownButton />
-              )}
-            </DropdownMenuItem>
+            <Protect>
+              <DropdownMenuItem
+                className={`${file.delete ? "text-blue-600" : "text-red-600"} cursor-pointer`}
+                onClick={() => setIsDialogOpen(true)}
+              >
+                {file.delete ? (
+                  <RestoreDropdownButtion />
+                ) : (
+                  <DeleteDropdownButton />
+                )}
+              </DropdownMenuItem>
+            </Protect>
             {file.storageURL && (
               <DropdownMenuItem asChild>
                 <Link href={file.storageURL} target="_blank">

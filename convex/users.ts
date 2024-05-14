@@ -37,7 +37,10 @@ export const addOrgIdToUser = internalMutation({
       .first();
     if (!user) throw new ConvexError("expected user to be defined");
     await ctx.db.patch(user._id, {
-      orgIds: [...user.orgIds, args.orgId],
+      orgIds: [...user.orgIds, {
+        orgId:args.orgId,
+        role:args.role
+      }],
     });
   },
 });

@@ -17,10 +17,11 @@ async function hasAccessToOrg(
 ) {
   try {
     const user = await getUser(ctx, tokenIdentifier);
-    console.log({user,tokenIdentifier})
+    console.log({ user, tokenIdentifier });
     // incase of personal account, the orgid will be in the token identifier that is the subject or the token or the user id
     const hasAccess =
-      user?.orgIds.includes(orgId) || user?.tokenIdentifier.includes(orgId);
+      user?.orgIds.some((userPermissions) => userPermissions.orgId === orgId) ||
+      user?.tokenIdentifier.includes(orgId);
     return hasAccess;
   } catch (error) {
     console.error();
@@ -74,17 +75,17 @@ export const createFile = mutation({
       args.orgId
     );
     if (!hasAccess) throw new ConvexError("Yout dont have access to this org");
-    
-    const senderName = identity.name
-    const senderProfilePicture = identity.pictureUrl
+
+    const senderName = identity.name;
+    const senderProfilePicture = identity.pictureUrl;
 
     const fileRecordId = await ctx.db.insert("files", {
       name: args.name,
       orgId: args.orgId,
       fileType: args.fileType,
-      senderProfilePicture:senderProfilePicture,
-      senderName:senderName,
-      delete:false
+      senderProfilePicture: senderProfilePicture,
+      senderName: senderName,
+      delete: false,
     });
 
     await ctx.scheduler.runAfter(0, internal.files.uploadFile, {
