@@ -28,6 +28,7 @@ export const createUser = internalMutation({
 export const addOrgIdToUser = internalMutation({
   args: { tokenIdentifier: v.string(), orgId: v.string(), role: v.string() },
   async handler(ctx, args) {
+    console.info({args})
     const user = await ctx.db
       .query("users")
       .withIndex("by_tokenIdentifier", (q) =>

@@ -25,7 +25,7 @@ http.route({
       switch (result.type) {
         case "user.created":
           await ctx.runMutation(internal.users.createUser, {
-            tokenIdentifier:`https://${process.env.NEXT_PUBLIC_CLERK_ISSUER}|${result.data.id}`
+            tokenIdentifier:`${process.env.NEXT_PUBLIC_CLERK_ISSUER}|${result.data.id}`
           });
           break;
         // case "user.updated":
@@ -39,7 +39,7 @@ http.route({
         //   break;
         case "organizationMembership.created":
           await ctx.runMutation(internal.users.addOrgIdToUser, {
-            tokenIdentifier: `https://${process.env.NEXT_PUBLIC_CONVEX_URL}|${result.data.public_user_data.user_id}`,
+            tokenIdentifier: `${process.env.NEXT_PUBLIC_CLERK_ISSUER}|${result.data.public_user_data.user_id}`,
             orgId: result.data.organization.id,
             role: result.data.role === "org:admin" ? "admin" : "member",
           });
