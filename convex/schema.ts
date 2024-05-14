@@ -10,7 +10,9 @@ export default defineSchema({
     fileType: v.optional(v.string()),
     thumbnailURL:v.optional(v.string()),
     thumbnailId:v.optional(v.string()),
-    delete:v.optional(v.boolean())
+    delete:v.optional(v.boolean()),
+    senderName:v.optional(v.string()),
+    senderProfilePicture:v.optional(v.string())
   }).index("by_orgId", ["orgId"]),
   users: defineTable({
     tokenIdentifier: v.string(),

@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +25,14 @@ import {
 } from "@/components/ui/dialog";
 import { getMaterialFileIcon } from "file-extension-icon-js";
 
-import { EllipsisVertical, Loader2, TrashIcon, UndoIcon } from "lucide-react";
+import {
+  EllipsisVertical,
+  Loader2,
+  TrashIcon,
+  UndoIcon,
+  ArrowUpRight,
+  HardDriveDownload,
+} from "lucide-react";
 import { Button } from "./ui/button";
 import { Doc } from "../../convex/_generated/dataModel";
 import { DialogClose } from "@radix-ui/react-dialog";
@@ -58,16 +66,25 @@ export default function FileCard({ file }: { file: Doc<"files"> }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem
-              className={`${file.delete?"text-blue-600":"text-red-600"} cursor-pointer`}
+              className={`${file.delete ? "text-blue-600" : "text-red-600"} cursor-pointer`}
               onClick={() => setIsDialogOpen(true)}
             >
-             {file.delete?<RestoreDropdownButtion/>:<DeleteDropdownButton/>}
+              {file.delete ? (
+                <RestoreDropdownButtion />
+              ) : (
+                <DeleteDropdownButton />
+              )}
             </DropdownMenuItem>
+            {file.storageURL && (
+              <DropdownMenuItem asChild>
+                <Link href={file.storageURL} target="_blank">
+                  <HardDriveDownload className="mr-2 h-4 w-4" />
+                  <span>Download</span>
+                </Link>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
-        <CardDescription>
-          {new Date(file._creationTime).toLocaleDateString()}
-        </CardDescription>
       </CardHeader>
       <CardContent className="h-[70px]">
         {file.thumbnailURL ? (
@@ -82,9 +99,21 @@ export default function FileCard({ file }: { file: Doc<"files"> }) {
       </CardContent>
       <CardFooter>
         {file.storageId ? (
-          <a href={file.storageURL} target="_blank">
-            <Button>Download</Button>
-          </a>
+          <CardDescription className="flex items-center gap-2">
+            <Avatar>
+              <AvatarImage src={file.senderProfilePicture} />
+              <AvatarFallback>
+                {file.senderName
+                  ?.split(" ")
+                  .map((word) => word[0])
+                  .join("") || "FS"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <p>{file.senderName}</p>
+              <p> {new Date(file._creationTime).toLocaleDateString()}</p>
+            </div>
+          </CardDescription>
         ) : (
           <Badge
             className="flex items-center gap-1 py-1 px-2"

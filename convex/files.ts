@@ -6,7 +6,6 @@ import {
   query,
   internalAction,
   internalMutation,
-  action,
 } from "./_generated/server";
 import { getUser } from "./users";
 import { api, internal } from "./_generated/api";
@@ -75,11 +74,16 @@ export const createFile = mutation({
       args.orgId
     );
     if (!hasAccess) throw new ConvexError("Yout dont have access to this org");
+    
+    const senderName = identity.name
+    const senderProfilePicture = identity.pictureUrl
 
     const fileRecordId = await ctx.db.insert("files", {
       name: args.name,
       orgId: args.orgId,
       fileType: args.fileType,
+      senderProfilePicture:senderProfilePicture,
+      senderName:senderName,
       delete:false
     });
 
