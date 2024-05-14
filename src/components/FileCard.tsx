@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { getMaterialFileIcon } from "file-extension-icon-js";
 
-import { EllipsisVertical, Loader2, TrashIcon } from "lucide-react";
+import { EllipsisVertical, Loader2, TrashIcon, UndoIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { Doc } from "../../convex/_generated/dataModel";
 import { DialogClose } from "@radix-ui/react-dialog";
@@ -58,11 +58,10 @@ export default function FileCard({ file }: { file: Doc<"files"> }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem
-              className="text-red-600 cursor-pointer"
+              className={`${file.delete?"text-blue-600":"text-red-600"} cursor-pointer`}
               onClick={() => setIsDialogOpen(true)}
             >
-              <TrashIcon className="mr-2 h-4 w-4" />
-              <span>Delete</span>
+             {file.delete?<RestoreDropdownButtion/>:<DeleteDropdownButton/>}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -128,7 +127,10 @@ function DeleteFileForm({ file }: { file: Doc<"files"> }) {
             title: `${file.name} marked for deleteion`,
             description: (
               <span>
-                You can restore the file from <Link href="/trash" className="underline">trash</Link>
+                You can restore the file from{" "}
+                <Link href="/trash" className="underline">
+                  trash
+                </Link>
               </span>
             ),
           });
@@ -196,9 +198,27 @@ function RestoreFileForm({ file }: { file: Doc<"files"> }) {
           {isTransistion && (
             <Loader2 size={15} className="animate-spin text-white" />
           )}
-          Delete
+          Restore
         </Button>
       </DialogFooter>
     </form>
+  );
+}
+
+function DeleteDropdownButton() {
+  return (
+    <>
+      <TrashIcon className="mr-2 h-4 w-4" />
+      <span>Delete</span>
+    </>
+  );
+}
+
+function RestoreDropdownButtion() {
+  return (
+    <>
+      <UndoIcon className="mr-2 h-4 w-4" />
+      <span>Restore</span>
+    </>
   );
 }
