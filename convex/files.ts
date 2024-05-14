@@ -38,6 +38,7 @@ export const getFiles = query({
     return ctx.db
       .query("files")
       .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
+      .filter((q) => q.eq(q.field("delete"), false))
       .order("desc")
       .collect();
   },
@@ -77,6 +78,29 @@ export const createFile = mutation({
       fileRecordId: fileRecordId,
       fileMime: args.fileType,
     });
+  },
+});
+
+export const markFileForDeletion = mutation({
+  args: { fileId: v.id("files"), orgId: v.string() },
+  async handler(ctx, args) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new ConvexError("You dont have access to this org");
+
+    const file = await ctx.db.get(args.fileId);
+
+    if (!file) throw new ConvexError("The file does not exists");
+
+    const hasAccess = await hasAccessToOrg(
+      ctx,
+      identity.tokenIdentifier,
+      args.orgId
+    );
+
+    if (!hasAccess)
+      throw new ConvexError("You dont have permission to delete this file");
+
+    await ctx.db.patch(file._id, { delete: true });
   },
 });
 

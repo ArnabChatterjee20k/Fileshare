@@ -32,6 +32,7 @@ import deleteFile from "@/actions/delete-file-action";
 import { toast } from "./ui/use-toast";
 import { Badge } from "./ui/badge";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function FileCard({ file }: { file: Doc<"files"> }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -42,7 +43,12 @@ export default function FileCard({ file }: { file: Doc<"files"> }) {
         .then(() => {
           toast({
             variant: "default",
-            description: `${file.name} deleted`,
+            title: `${file.name} marked for deleteion`,
+            description: (
+              <span>
+                You can restore the file from <Link href="/trash">trash</Link>
+              </span>
+            ),
           });
         })
         .catch((error) => {
@@ -53,7 +59,7 @@ export default function FileCard({ file }: { file: Doc<"files"> }) {
         });
     });
   }
-  const router = useRouter()
+  const router = useRouter();
   return (
     <Card>
       <CardHeader className="relative">
@@ -98,7 +104,9 @@ export default function FileCard({ file }: { file: Doc<"files"> }) {
       </CardContent>
       <CardFooter>
         {file.storageId ? (
-          <a href={file.storageURL} target="_blank"><Button>Download</Button></a>
+          <a href={file.storageURL} target="_blank">
+            <Button>Download</Button>
+          </a>
         ) : (
           <Badge
             className="flex items-center gap-1 py-1 px-2"

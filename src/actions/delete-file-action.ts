@@ -12,7 +12,7 @@ export default async function deleteFile({
 }) {
   const token = await getAuthToken();
   await fetchMutation(
-    api.files.deleteFile,
+    api.files.markFileForDeletion,
     {
       fileId,
       orgId,
