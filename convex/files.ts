@@ -28,7 +28,7 @@ async function hasAccessToOrg(
   }
 }
 
-async function hasUploadPermissionToOrg(
+async function hasWritePermissionToOrg(
   ctx: QueryCtx | MutationCtx,
   tokenIdentifier: string,
   orgId: string
@@ -95,7 +95,7 @@ export const createFile = mutation({
       throw new ConvexError("Yuo must be logged in to upload a file");
 
     const user = await getUser(ctx, identity.tokenIdentifier);
-    const hasAccess = await hasUploadPermissionToOrg(
+    const hasAccess = await hasWritePermissionToOrg(
       ctx,
       user.tokenIdentifier,
       args.orgId
@@ -137,7 +137,7 @@ export const trash = mutation({
 
     if (!file) throw new ConvexError("The file does not exists");
 
-    const hasAccess = await hasAccessToOrg(
+    const hasAccess = await hasWritePermissionToOrg(
       ctx,
       identity.tokenIdentifier,
       args.orgId

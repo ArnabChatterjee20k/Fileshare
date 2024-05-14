@@ -16,16 +16,16 @@ import uploadFile from "@/actions/upload-file-action";
 import type { UploadFileType } from "@/actions/upload-file-action";
 import { useToast } from "./ui/use-toast";
 import { useRef } from "react";
-import { Protect, useUser } from "@clerk/nextjs";
+import { Protect, useOrganization } from "@clerk/nextjs";
 
 export default function UploadButton({
   orgId,
 }: {
   orgId: string;
 }) {
-  const {user} = useUser()
+  const {organization} = useOrganization()
   return (
-    <Protect condition={check=>check({role:"org:admin"})||user?.id===orgId}  fallback={<p>You need to be admin to upload</p>}>
+    <Protect condition={check=>check({role:"org:admin"})||organization===null}  fallback={<p>You need to be admin to upload</p>}>
       <UploadButtonMain orgId={orgId} />
     </Protect>
   );
