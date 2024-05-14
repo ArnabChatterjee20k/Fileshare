@@ -5,6 +5,7 @@ import React from "react";
 import { api } from "../../../convex/_generated/api";
 import { Loader2Icon } from "lucide-react";
 import FileCard from "@/components/FileCard";
+import EmptyBox from "@/components/EmptyBox";
 
 export default function Trash() {
   const { orgId, user } = useAuth();
@@ -24,6 +25,14 @@ export default function Trash() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {user.isLoaded && files?.map((file) => <FileCard file={file} />)}
       </div>
+      {files?.length === 0 && (
+        <div className="mx-auto flex flex-col items-center justify-center gap-4 min-h-[60vh]">
+          <EmptyBox className="max-w-[300px]" />
+          <p className="text-2xl mx-auto text-center">
+            Trash is empty
+          </p>
+        </div>
+      )}
     </main>
   );
 }
