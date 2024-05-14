@@ -26,9 +26,13 @@ export const createUser = internalMutation({
 });
 
 export const addOrgIdToUser = internalMutation({
-  args: { tokenIdentifier: v.string(), orgId: v.string(), role: v.string() },
+  args: {
+    tokenIdentifier: v.string(),
+    orgId: v.string(),
+    role: v.union(v.literal("admin"), v.literal("member")),
+  },
   async handler(ctx, args) {
-    console.info({args})
+    console.info({ args });
     const user = await ctx.db
       .query("users")
       .withIndex("by_tokenIdentifier", (q) =>
@@ -37,10 +41,13 @@ export const addOrgIdToUser = internalMutation({
       .first();
     if (!user) throw new ConvexError("expected user to be defined");
     await ctx.db.patch(user._id, {
-      orgIds: [...user.orgIds, {
-        orgId:args.orgId,
-        role:args.role
-      }],
+      orgIds: [
+        ...user.orgIds,
+        {
+          orgId: args.orgId,
+          role: args.role,
+        },
+      ],
     });
   },
 });

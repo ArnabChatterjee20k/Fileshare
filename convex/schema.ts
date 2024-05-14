@@ -16,6 +16,11 @@ export default defineSchema({
   }).index("by_orgId", ["orgId"]),
   users: defineTable({
     tokenIdentifier: v.string(),
-    orgIds: v.array(v.object({ orgId: v.string(), role: v.string() })),
+    orgIds: v.array(
+      v.object({
+        orgId: v.string(),
+        role: v.union(v.literal("admin"), v.literal("member")),
+      })
+    ),
   }).index("by_tokenIdentifier", ["tokenIdentifier"]),
 });

@@ -17,15 +17,34 @@ async function hasAccessToOrg(
 ) {
   try {
     const user = await getUser(ctx, tokenIdentifier);
-    console.log({ user, tokenIdentifier });
     // incase of personal account, the orgid will be in the token identifier that is the subject or the token or the user id
     const hasAccess =
       user?.orgIds.some((userPermissions) => userPermissions.orgId === orgId) ||
       user?.tokenIdentifier.includes(orgId);
     return hasAccess;
   } catch (error) {
-    console.error();
-    return undefined;
+    console.error(error);
+    return false;
+  }
+}
+
+async function hasUploadPermissionToOrg(
+  ctx: QueryCtx | MutationCtx,
+  tokenIdentifier: string,
+  orgId: string
+) {
+  try {
+    const user = await getUser(ctx, tokenIdentifier);
+    // incase of personal account, the orgid will be in the token identifier that is the subject or the token or the user id
+    const hasAccess =
+      user?.orgIds.some(
+        (userPermissions) =>
+          userPermissions.orgId === orgId && userPermissions.role === "admin"
+      ) || user?.tokenIdentifier.includes(orgId);
+    return hasAccess;
+  } catch (error) {
+    console.error(error);
+    return false;
   }
 }
 
@@ -35,22 +54,29 @@ export const getFiles = query({
     fileType: v.union(v.literal("nondeleted"), v.literal("deleted")),
   },
   async handler(ctx, args) {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-    const hasAccess = await hasAccessToOrg(
-      ctx,
-      identity?.tokenIdentifier!,
-      args.orgId
-    );
-    if (!hasAccess) return [];
-    return ctx.db
-      .query("files")
-      .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
-      .filter((q) =>
-        q.eq(q.field("delete"), args.fileType === "deleted" ? true : false)
-      )
-      .order("desc")
-      .collect();
+    console.log(args);
+    try {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) return [];
+      const hasAccess = await hasAccessToOrg(
+        ctx,
+        identity?.tokenIdentifier!,
+        args.orgId
+      );
+      console.log(hasAccess);
+      if (!hasAccess) return [];
+      return ctx.db
+        .query("files")
+        .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
+        .filter((q) =>
+          q.eq(q.field("delete"), args.fileType === "deleted" ? true : false)
+        )
+        .order("desc")
+        .collect();
+    } catch (error) {
+      console.log(error);
+      throw new ConvexError("Error occured");
+    }
   },
 });
 
@@ -69,7 +95,7 @@ export const createFile = mutation({
       throw new ConvexError("Yuo must be logged in to upload a file");
 
     const user = await getUser(ctx, identity.tokenIdentifier);
-    const hasAccess = await hasAccessToOrg(
+    const hasAccess = await hasUploadPermissionToOrg(
       ctx,
       user.tokenIdentifier,
       args.orgId

@@ -16,8 +16,22 @@ import uploadFile from "@/actions/upload-file-action";
 import type { UploadFileType } from "@/actions/upload-file-action";
 import { useToast } from "./ui/use-toast";
 import { useRef } from "react";
+import { Protect, useUser } from "@clerk/nextjs";
 
-export default function UploadButton({ orgId }: { orgId: string }) {
+export default function UploadButton({
+  orgId,
+}: {
+  orgId: string;
+}) {
+  const {user} = useUser()
+  return (
+    <Protect condition={check=>check({role:"org:admin"})||user?.id===orgId}  fallback={<p>You need to be admin to upload</p>}>
+      <UploadButtonMain orgId={orgId} />
+    </Protect>
+  );
+}
+
+export function UploadButtonMain({ orgId }: { orgId: string }) {
   const { toast } = useToast();
   const fileRef = useRef(null);
   async function uploadFileHandler(
@@ -28,7 +42,7 @@ export default function UploadButton({ orgId }: { orgId: string }) {
     // we can check here the file is present or not to remove the ts errors
     const file = await payload.get("file").arrayBuffer();
     const name = payload.get("name") as string;
-    payload.append("orgId",orgId)
+    payload.append("orgId", orgId);
     try {
       await uploadFile(payload);
       toast({
