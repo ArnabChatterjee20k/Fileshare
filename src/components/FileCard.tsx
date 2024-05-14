@@ -33,32 +33,11 @@ import { toast } from "./ui/use-toast";
 import { Badge } from "./ui/badge";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import restoreFile from "@/actions/restore-file-action";
 
 export default function FileCard({ file }: { file: Doc<"files"> }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isTransistion, startTransition] = useTransition();
-  function deleteFileAction() {
-    startTransition(() => {
-      deleteFile({ fileId: file._id, orgId: file.orgId || "" })
-        .then(() => {
-          toast({
-            variant: "default",
-            title: `${file.name} marked for deleteion`,
-            description: (
-              <span>
-                You can restore the file from <Link href="/trash">trash</Link>
-              </span>
-            ),
-          });
-        })
-        .catch((error) => {
-          toast({
-            variant: "destructive",
-            description: `Error while deleting ${file.name}`,
-          });
-        });
-    });
-  }
+
   const router = useRouter();
   return (
     <Card>
@@ -122,27 +101,104 @@ export default function FileCard({ file }: { file: Doc<"files"> }) {
           <DialogHeader>
             <DialogTitle>Are you absolutely sure?</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. This will permanently delete your
-              file
-              <form action={deleteFileAction}>
-                <DialogFooter className="mt-4">
-                  <DialogClose asChild>
-                    <Button type="button" variant="secondary">
-                      Close
-                    </Button>
-                  </DialogClose>
-                  <Button variant="destructive" disabled={isTransistion}>
-                    {isTransistion && (
-                      <Loader2 size={15} className="animate-spin text-white" />
-                    )}
-                    Delete
-                  </Button>
-                </DialogFooter>
-              </form>
+              {file.delete
+                ? "Your fille is going to restore"
+                : "This action will mark your file for deletion"}
+              {file.delete ? (
+                <RestoreFileForm file={file} />
+              ) : (
+                <DeleteFileForm file={file} />
+              )}
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
       </Dialog>
     </Card>
+  );
+}
+
+function DeleteFileForm({ file }: { file: Doc<"files"> }) {
+  const [isTransistion, startTransition] = useTransition();
+  function deleteFileAction() {
+    startTransition(() => {
+      deleteFile({ fileId: file._id, orgId: file.orgId || "" })
+        .then(() => {
+          toast({
+            variant: "default",
+            title: `${file.name} marked for deleteion`,
+            description: (
+              <span>
+                You can restore the file from <Link href="/trash" className="underline">trash</Link>
+              </span>
+            ),
+          });
+        })
+        .catch((error) => {
+          toast({
+            variant: "destructive",
+            description: `Error while deleting ${file.name}`,
+          });
+        });
+    });
+  }
+  return (
+    <form action={deleteFileAction}>
+      <DialogFooter className="mt-4">
+        <DialogClose asChild>
+          <Button type="button" variant="secondary">
+            Close
+          </Button>
+        </DialogClose>
+        <Button variant="destructive" disabled={isTransistion}>
+          {isTransistion && (
+            <Loader2 size={15} className="animate-spin text-white" />
+          )}
+          Delete
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
+function RestoreFileForm({ file }: { file: Doc<"files"> }) {
+  const [isTransistion, startTransition] = useTransition();
+  function restoreFileAction() {
+    startTransition(() => {
+      restoreFile({ fileId: file._id, orgId: file.orgId || "" })
+        .then(() => {
+          toast({
+            variant: "default",
+            title: `${file.name} restored`,
+            description: (
+              <span>
+                You can now see your file in <Link href="/">All Files</Link>
+              </span>
+            ),
+          });
+        })
+        .catch((error) => {
+          toast({
+            variant: "destructive",
+            description: `Error while deleting ${file.name}`,
+          });
+        });
+    });
+  }
+  return (
+    <form action={restoreFileAction}>
+      <DialogFooter className="mt-4">
+        <DialogClose asChild>
+          <Button type="button" variant="secondary">
+            Close
+          </Button>
+        </DialogClose>
+        <Button variant="default" disabled={isTransistion}>
+          {isTransistion && (
+            <Loader2 size={15} className="animate-spin text-white" />
+          )}
+          Delete
+        </Button>
+      </DialogFooter>
+    </form>
   );
 }

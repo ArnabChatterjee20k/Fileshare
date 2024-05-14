@@ -6,6 +6,7 @@ import {
   SignedOut,
   SignInButton,
 } from "@clerk/nextjs";
+import Link from "next/link";
 
 export function Header() {
   return (
@@ -15,7 +16,15 @@ export function Header() {
           <span className="ml-3 text-xl">FileShare</span>
         </a>
         <nav className="md:mr-auto md:ml-4 md:py-1 md:pl-4 md:border-l md:border-gray-400	flex flex-wrap items-center text-base justify-center">
-          <a className="mr-5 hover:text-gray-900">First Link</a>
+          <Link href="/" className="mr-5 text-gray-500 hover:text-gray-900 font-medium cursor-pointer">
+            All Files
+          </Link>
+          <Link href="/favorites" className="mr-5 text-gray-500 hover:text-gray-900 font-medium cursor-pointer">
+            Favorites
+          </Link>
+          <Link href="/trash" className="mr-5 text-gray-500 hover:text-gray-900 font-medium cursor-pointer">
+            Trash
+          </Link>
         </nav>
         <div className="flex gap-3">
           <OrganizationSwitcher />

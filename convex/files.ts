@@ -22,9 +22,11 @@ async function hasAccessToOrg(
     user.orgIds.includes(orgId) || user.tokenIdentifier.includes(orgId);
   return hasAccess;
 }
+
 export const getFiles = query({
   args: {
     orgId: v.string(),
+    fileType: v.union(v.literal("nondeleted"), v.literal("deleted")),
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
@@ -38,7 +40,9 @@ export const getFiles = query({
     return ctx.db
       .query("files")
       .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
-      .filter((q) => q.eq(q.field("delete"), false))
+      .filter((q) =>
+        q.eq(q.field("delete"), args.fileType === "deleted" ? true : false)
+      )
       .order("desc")
       .collect();
   },
@@ -81,8 +85,12 @@ export const createFile = mutation({
   },
 });
 
-export const markFileForDeletion = mutation({
-  args: { fileId: v.id("files"), orgId: v.string() },
+export const trash = mutation({
+  args: {
+    fileId: v.id("files"),
+    orgId: v.string(),
+    operation: v.union(v.literal("restoreFromTrash"), v.literal("putToTrash")),
+  },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new ConvexError("You dont have access to this org");
@@ -100,7 +108,8 @@ export const markFileForDeletion = mutation({
     if (!hasAccess)
       throw new ConvexError("You dont have permission to delete this file");
 
-    await ctx.db.patch(file._id, { delete: true });
+    const deleteMode = args.operation==="putToTrash"?true:false
+    await ctx.db.patch(file._id, { delete: deleteMode });
   },
 });
 

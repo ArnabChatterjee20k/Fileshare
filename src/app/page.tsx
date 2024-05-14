@@ -1,5 +1,4 @@
 "use client";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import UploadButton from "@/components/UploadButton";
@@ -7,17 +6,12 @@ import FileCard from "@/components/FileCard";
 import EmptyBox from "@/components/EmptyBox";
 import { Suspense } from "react";
 import { Loader2Icon } from "lucide-react";
-export default function Home() {
-  const organization = useOrganization();
-  const user = useUser();
+import useAuth from "@/hooks/useAuth";
 
-  let orgId = null;
-  if (organization.isLoaded && user.isLoaded) {
-    orgId = organization.organization?.id ?? user.user?.id;
-  }
-  user.isLoaded && console.log(user.user?.id);
+export default function Home() {
+  const {orgId,user} = useAuth()
   // if organisation not present dont run this query using skip
-  const files = useQuery(api.files.getFiles, orgId ? { orgId } : "skip");
+  const files = useQuery(api.files.getFiles, orgId ? { orgId,fileType:"nondeleted" } : "skip");
   if (files === undefined)
     return (
       <div className="flex flex-col justify-center items-center min-h-[60vh]">

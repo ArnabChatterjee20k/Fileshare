@@ -3,7 +3,7 @@ import { api } from "../../convex/_generated/api";
 import { fetchMutation } from "convex/nextjs";
 import { getAuthToken } from "./_auth";
 import type { GenericId } from "convex/values";
-export default async function deleteFile({
+export default async function restoreFile({
   fileId,
   orgId,
 }: {
@@ -16,7 +16,7 @@ export default async function deleteFile({
     {
       fileId,
       orgId,
-      operation:"putToTrash"
+      operation:"restoreFromTrash"
     },
     { token }
   );
